@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Structural Motion Visualisation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:#fdf6ec;color:#372a20;font-family:'Nunito Sans',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:#c56b43;} a:hover{color:#9c4f2e;}
+  .wrap{width:100%;max-width:880px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(16px,4vw,40px) 48px;min-height:100vh;display:flex;flex-direction:column;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+  .brand{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:16px;}
+  .progress-label{font-size:12.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#a08b76;}
+  .dots{display:flex;gap:8px;margin-top:14px;}
+  .dots span{display:inline-block;height:6px;border-radius:999px;flex:1;background:#ecdcc8;transition:background .2s ease;}
+  .dots span.on{background:#c56b43;}
+  .card{background:#fffdf9;border:1px solid #ecdcc8;border-radius:24px;padding:clamp(20px,3.5vw,36px);margin-top:26px;}
+  .card.big{padding:clamp(28px,5vw,56px);}
+  .kicker{font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#c56b43;}
+  .kicker-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .kicker-row .dotsep{display:inline-block;width:5px;height:5px;border-radius:50%;background:#ecdcc8;}
+  .objective{font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#a08b76;}
+  h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:clamp(34px,6vw,58px);line-height:1.05;letter-spacing:-0.015em;margin:16px 0 0;text-wrap:balance;}
+  h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:clamp(26px,4vw,40px);line-height:1.08;letter-spacing:-0.01em;margin:10px 0 0;text-wrap:balance;}
+  .lede{font-size:clamp(16px,1.7vw,19px);line-height:1.65;color:#5d4c3c;max-width:54ch;margin:20px 0 0;text-wrap:pretty;}
+  .body-copy{font-size:clamp(15.5px,1.6vw,18px);line-height:1.65;color:#5d4c3c;margin:14px 0 0;text-wrap:pretty;}
+  .player{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:16px;background:#f3e7d5;margin-top:22px;}
+  .player video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#f3e7d5;z-index:2;display:block;}
+  .placeholder{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;background-color:#f3e7d5;background-image:repeating-linear-gradient(135deg,rgba(55,42,32,0.05) 0px,rgba(55,42,32,0.05) 1px,transparent 1px,transparent 11px);}
+  .placeholder .ph-tag{font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#a08b76;}
+  .placeholder .ph-file{font-size:clamp(12.5px,1.6vw,15px);font-weight:600;color:#5d4c3c;background:#fffdf9;border:1px solid #ecdcc8;border-radius:10px;padding:8px 12px;word-break:break-all;}
+  .placeholder .ph-note{font-size:12.5px;color:#a08b76;max-width:34ch;line-height:1.4;}
+  .spinner-wrap{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+  .spinner{width:30px;height:30px;border-radius:50%;border:3px solid rgba(55,42,32,0.16);border-top-color:#c56b43;animation:smv-spin .8s linear infinite;}
+  @keyframes smv-spin{to{transform:rotate(360deg);}}
+  .watching{position:absolute;top:12px;left:12px;z-index:7;padding:8px 14px;border-radius:999px;background:rgba(55,42,32,0.85);color:#fdf6ec;font-size:13px;font-weight:700;backdrop-filter:blur(4px);}
+  .src-line{font-size:12px;color:#a08b76;margin-top:8px;word-break:break-all;}
+  .ctrl-label{font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#a08b76;margin:20px 0 10px;}
+  .ctrl-row{display:flex;flex-wrap:wrap;gap:10px;}
+  .opt-desc{font-size:13px;line-height:1.5;color:#a08b76;margin-top:10px;}
+  .opt-btn{appearance:none;cursor:pointer;font-family:'Nunito Sans',sans-serif;font-size:15px;font-weight:700;line-height:1;padding:15px 20px;min-height:50px;border-radius:999px;border:2px solid #ecdcc8;background:#fffdf9;color:#5d4c3c;transition:background .15s ease,color .15s ease,border-color .15s ease;}
+  .opt-btn:hover{border-color:#c56b43;}
+  .opt-btn[aria-pressed="true"]{border-color:#c56b43;background:#c56b43;color:#fffdf9;}
+  .remember{display:flex;gap:12px;align-items:flex-start;margin-top:22px;background:#fbeedd;border-radius:14px;padding:14px 16px;}
+  .remember .r-tag{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#c56b43;white-space:nowrap;padding-top:2px;}
+  .remember .r-text{font-size:14.5px;line-height:1.55;color:#4a3a2b;}
+  .navrow{display:flex;justify-content:space-between;gap:12px;margin-top:18px;}
+  .btn-primary{appearance:none;cursor:pointer;font-family:'Nunito Sans',sans-serif;font-size:16px;font-weight:700;padding:17px 28px;min-height:54px;border-radius:999px;border:none;background:#c56b43;color:#fffdf9;transition:background .15s ease;}
+  .btn-primary:hover{background:#9c4f2e;}
+  .btn-back{appearance:none;cursor:pointer;font-family:'Nunito Sans',sans-serif;font-size:16px;font-weight:700;padding:15px 22px;min-height:54px;border-radius:999px;border:2px solid #ecdcc8;background:#fffdf9;color:#5d4c3c;transition:border-color .15s ease;}
+  .btn-back:hover{border-color:#c56b43;}
+  .start-btn{margin-top:30px;font-size:17px;}
+  .outro-card{text-align:center;}
+  .outro-card .lede{margin-left:auto;margin-right:auto;max-width:48ch;}
+  .outro-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:28px;}
+  footer{margin-top:auto;padding-top:32px;}
+  footer p{font-size:11.5px;line-height:1.7;color:#a08b76;text-align:center;margin:0;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">Structural Motion Visualisation</div>
+    <div class="progress-label" id="progress-label">Welcome</div>
+  </div>
+  <div class="dots" id="dots"><span></span><span></span><span></span></div>
+
+  <div class="screen active" id="screen-0" data-screen-label="Welcome">
+    <div class="card big">
+      <div class="kicker">RCH02 · University of Canterbury</div>
+      <h1>Kia ora, let's see how buildings move in an earthquake.</h1>
+      <p class="lede">Three short stops, each with an animation you can play with: buildings that sway to their own rhythm, shaking that builds up, and a storey that gives way. It takes a few minutes, and no engineering background is needed.</p>
+      <button type="button" class="btn-primary start-btn" onclick="goStep(1)">Start the walkthrough &rarr;</button>
+    </div>
+  </div>
+
+  <div id="stops"></div>
+
+  <div class="screen" id="screen-4" data-screen-label="Finish">
+    <div class="card big outro-card">
+      <h2 style="font-size:clamp(30px,5vw,48px);">Ka pai, that's all three stops.</h2>
+      <p class="lede">You've seen how buildings sway to their own rhythm, what resonance does, and why a soft storey is dangerous. When you're ready, head back to the survey tab to finish up.</p>
+      <div class="outro-actions">
+        <button type="button" class="btn-back" onclick="goStep(1)">&#8634; Watch again from the start</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>RCH02 · Structural Motion Visualisation, ENCN 493, Department of Civil and Natural Resources Engineering, University of Canterbury.</p>
+  </footer>
+</div>
+
+<script>
+var DATA = [
+  {
+    id: 'O1',
+    objective: 'Natural frequency and mode shapes',
+    title: 'Every building sways at its own pace',
+    body: 'Give a building a nudge and it sways at its own rhythm, a bit like a pendulum. Taller buildings swing more slowly, and each one bends in its own characteristic way (engineers call that a mode shape). Try the four heights and watch how the rhythm changes.',
+    takeaway: 'Taller buildings sway more slowly; each has its own natural rhythm.',
+    controlLabel: 'Building height',
+    options: [
+      { label: '3 storeys', short: '3 storeys', file: 'videos/O1_3storey.mp4' },
+      { label: '5 storeys', short: '5 storeys', file: 'videos/O1_5storey.mp4' },
+      { label: '7 storeys', short: '7 storeys', file: 'videos/O1_7storey.mp4' },
+      { label: '9 storeys', short: '9 storeys', file: 'videos/O1_9storey.mp4' }
+    ]
+  },
+  {
+    id: 'O2',
+    objective: 'Resonance and response spectra',
+    title: 'When the shaking matches the sway',
+    body: 'Ever pushed someone on a swing? Time your pushes right and they go higher and higher. Earthquakes can do that to buildings; it\u2019s called resonance. A more flexible building keeps a different rhythm, so the same shaking barely bothers it. Engineers sum this up in a chart called a response spectrum: how strongly buildings of different rhythms react to one quake.',
+    takeaway: 'Shaking that matches a building\u2019s rhythm builds up dramatically.',
+    controlLabel: 'Shaking scenario',
+    options: [
+      { label: 'Resonant', short: 'Resonant', file: 'videos/O2_resonant.mp4' },
+      { label: 'Flexible', short: 'Flexible', file: 'videos/O2_flexible.mp4' }
+    ]
+  },
+  {
+    id: 'O3',
+    objective: 'Soft-storey failure mechanisms',
+    title: 'The trouble with a weak ground floor',
+    body: 'Some buildings have a ground floor that\u2019s mostly open: parking, or big shop windows. That\u2019s a soft storey: one weak level under a heavy stack. In a quake, the movement crowds into that level, and it can give way. Compare it with a regular building, where every floor shares the load.',
+    takeaway: 'A weak lower storey concentrates the damage and can lead to collapse.',
+    controlLabel: 'Building type',
+    options: [
+      { label: 'Regular', short: 'Regular', file: 'videos/O3_regular.mp4', desc: 'Every floor shares the load — the building sways evenly, with no weak level.' },
+      { label: 'Uniform soft storey', short: 'Uniform soft storey', file: 'videos/O3_softstorey_uniform.mp4', desc: 'Open evenly all around: the building sways straight, and the damage crowds into the weak ground floor.' },
+      { label: 'Eccentric soft storey', short: 'Eccentric soft storey', file: 'videos/O3_softstorey_eccentric.mp4', desc: 'Open on one side only (shopfronts at the front, solid wall at the back): the building twists as it sways, piling damage onto the weak side.' }
+    ]
+  },
+];
+
+var state = { step: 0, sel: [0, 0, 0] };
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function buildStops() {
+  var host = document.getElementById('stops');
+  var html = '';
+  DATA.forEach(function (d, idx) {
+    var n = idx + 1;
+    html +=
+      '<div class="screen" id="screen-' + n + '" data-screen-label="Stop ' + n + ' of 3">' +
+        '<div class="card">' +
+          '<div class="kicker-row">' +
+            '<span class="kicker">Stop ' + n + ' of 3</span>' +
+            '<span class="dotsep"></span>' +
+            '<span class="objective">Objective ' + n + ': ' + esc(d.objective) + '</span>' +
+          '</div>' +
+          '<h2>' + esc(d.title) + '</h2>' +
+          '<p class="body-copy">' + esc(d.body) + '</p>' +
+          '<div class="player">' +
+            '<video id="vid-' + n + '" muted loop playsinline preload="auto"></video>' +
+            '<div class="placeholder" id="ph-' + n + '">' +
+              '<span class="ph-tag">Placeholder video</span>' +
+              '<span class="ph-file" id="ph-file-' + n + '"></span>' +
+              '<span class="ph-note">Autoplays and loops once this file is added to the videos/ folder.</span>' +
+            '</div>' +
+            '<div class="spinner-wrap" id="spin-' + n + '" style="display:none;"><div class="spinner"></div></div>' +
+            '<div class="watching">You\u2019re watching: <span id="watch-' + n + '"></span></div>' +
+          '</div>' +
+          '<div class="src-line">&#9656; <span id="src-' + n + '"></span></div>';
+    if (!d.single) {
+      html += '<div class="ctrl-label">' + esc(d.controlLabel) + ' (tap to swap)</div><div class="ctrl-row" id="ctrl-' + n + '">';
+      d.options.forEach(function (o, i) {
+        html += '<button type="button" class="opt-btn" aria-pressed="' + (i === 0 ? 'true' : 'false') + '" onclick="select(' + idx + ',' + i + ')">' + esc(o.label) + '</button>';
+      });
+      html += '</div>';
+      if (d.options[0].desc) html += '<div class="opt-desc" id="desc-' + n + '">' + esc(d.options[0].desc) + '</div>';
+    }
+    html +=
+          '<div class="remember"><span class="r-tag">Remember</span><span class="r-text">' + esc(d.takeaway) + '</span></div>' +
+        '</div>' +
+        '<div class="navrow">' +
+          '<button type="button" class="btn-back" onclick="goStep(' + (n - 1) + ')">&larr; Back</button>' +
+          '<button type="button" class="btn-primary" onclick="goStep(' + (n + 1) + ')">' + (n === 3 ? 'Finish &rarr;' : 'Next stop &rarr;') + '</button>' +
+        '</div>' +
+      '</div>';
+  });
+  host.innerHTML = html;
+}
+
+function goStep(n) {
+  if (n < 0 || n > 4) return;
+  state.step = n;
+  for (var i = 0; i <= 4; i++) {
+    var el = document.getElementById('screen-' + i);
+    if (el) el.classList.toggle('active', i === n);
+  }
+  var dots = document.getElementById('dots').children;
+  for (var j = 0; j < 3; j++) dots[j].classList.toggle('on', n >= j + 1);
+  document.getElementById('progress-label').textContent =
+    n === 0 ? 'Welcome' : n === 4 ? 'Finished' : 'Stop ' + n + ' of 3';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function select(idx, i) {
+  if (state.sel[idx] === i) return;
+  state.sel[idx] = i;
+  var ctrl = document.getElementById('ctrl-' + (idx + 1));
+  if (ctrl) {
+    var btns = ctrl.querySelectorAll('.opt-btn');
+    for (var b = 0; b < btns.length; b++) btns[b].setAttribute('aria-pressed', b === i ? 'true' : 'false');
+  }
+  var desc = document.getElementById('desc-' + (idx + 1));
+  if (desc && DATA[idx].options[i].desc) desc.textContent = DATA[idx].options[i].desc;
+  loadVideo(idx);
+}
+
+function loadVideo(idx) {
+  var n = idx + 1;
+  var d = DATA[idx];
+  var opt = d.options[state.sel[idx]];
+  var v = document.getElementById('vid-' + n);
+  var ph = document.getElementById('ph-' + n);
+  var spin = document.getElementById('spin-' + n);
+  document.getElementById('watch-' + n).textContent = opt.short;
+  document.getElementById('src-' + n).textContent = opt.file;
+  document.getElementById('ph-file-' + n).textContent = opt.file;
+  ph.style.display = 'flex';
+  spin.style.display = 'flex';
+  var thisFile = opt.file;
+  v.onloadeddata = function () {
+    if (thisFile !== d.options[state.sel[idx]].file) return;
+    ph.style.display = 'none';
+    spin.style.display = 'none';
+  };
+  v.onerror = function () {
+    if (thisFile !== d.options[state.sel[idx]].file) return;
+    spin.style.display = 'none';
+  };
+  fetch(thisFile, { headers: { Range: 'bytes=0-1' } }).then(function (r) {
+    if (thisFile !== d.options[state.sel[idx]].file) return;
+    if (r.ok) {
+      v.src = thisFile;
+      v.muted = true;
+      v.loop = true;
+      try { v.load(); var p = v.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+    } else {
+      try { v.removeAttribute('src'); v.load(); } catch (e) {}
+      spin.style.display = 'none';
+    }
+  }).catch(function () {
+    if (thisFile === d.options[state.sel[idx]].file) spin.style.display = 'none';
+  });
+}
+
+buildStops();
+DATA.forEach(function (d, idx) { loadVideo(idx); });
+</script>
+</body>
+</html>
